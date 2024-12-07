@@ -2,12 +2,17 @@
 #include <stdlib.h>
 #include <string.h>
 
+// NOTE: Array[Yaxis][Xaxis]
+// NOTE: Inom Tubig jusq
+
+// TODO: Levels, Input & Error Handler, GUI
+
+
+// Colors:
 #define colorGreen "\e[1;32m"
 #define colorBlue "\e[1;34m"
 #define colorRed "\e[;31m"
 #define colorReset "\e[0m"
-
-// NOTE: Array[Yaxis][Xaxis]
 
 // Global Variables
 int mapSize = 5, objectiveCount = 1;
@@ -16,6 +21,7 @@ char directionFacing[] = "right";
 
 // Functions Initialization
 void mapLayout();
+void displayMenu();
 void movePlayer(char movement, int mazeMap[][mapSize], int currentPosition[], int boundaryX, int boundaryY);
 
 int main(){
@@ -29,6 +35,7 @@ int main(){
     while(objectiveCount != 0){
         objectiveCount = 0;         // Reset to Zero
         printf("\e[1;1H\e[2J");
+        displayMenu();
         mapLayout(mazeMap, currentPosition, sizeof(mazeMap) / sizeof(mazeMap[0]), sizeof(mazeMap[0])/ sizeof(mazeMap[0][0]));
     }
 }
@@ -43,13 +50,13 @@ void mapLayout(int mazeMap[][mapSize], int currentPosition[2], int row, int colu
     printf("\n");
     for(Yaxis = 0; Yaxis < row; Yaxis++){
         // Vertical Lines
-        printf("\n\t");
+        printf("\n\t\t");
         for(rowSeparator = 0; rowSeparator < 5; rowSeparator++) printf("+-------");
         printf("+");
         printf("\t\t\t|");      // NOTE: This line is for separator of Panels
         // Horizontal Lines
         for(columnSeparator = 0; columnSeparator < 3; columnSeparator++){
-            printf("\n\t");
+            printf("\n\t\t");
             for(Xaxis = 0; Xaxis < (column + 1); Xaxis++){
                 printf("|");
                 for(columnSpacing = 0; columnSpacing < 7; columnSpacing++){
@@ -61,15 +68,14 @@ void mapLayout(int mazeMap[][mapSize], int currentPosition[2], int row, int colu
                             printf(colorReset);
                         }
                         else printf(mazeMap[Yaxis][Xaxis] == 1 ? " " : (mazeMap[Yaxis][Xaxis] == 0) ? "X" : "◦");           // Open and Blocked Paths
-
-                        if (mazeMap[Yaxis][Xaxis] == 2) objectiveCount++;                                                   // Check For Objective Count
+                        objectiveCount += (mazeMap[Yaxis][Xaxis] == 2) ? 1 : 0;                                             // Counts Existing Objectives
                     }   else printf(" ");
                 }
             }
             printf("\t\t|");        // NOTE: This line is for separator of Panels
         }
     }
-    printf("\n\t");
+    printf("\n\t\t");
     for(rowSeparator = 0; rowSeparator < 5; rowSeparator++) printf("+-------");
     printf("+");
 
@@ -89,15 +95,11 @@ void movePlayer(char movement, int mazeMap[][mapSize], int currentPosition[], in
     int newY = currentPosition[0];
     int newX = currentPosition[1];
 
-    if(movement == 'a'){                                                // Rotate Counter Clockwise
-        directionIndex = (directionIndex + 3) % 4;
+    if(movement == 'a' || movement == 'd'){                                                // Rotate Counter Clockwise or Clockwise respectively
+        directionIndex = (movement == 'a') ? ((directionIndex + 3) % 4) : ((directionIndex + 1) % 4);
         strcpy(directionFacing, directions[directionIndex]);
     }
-    else if(movement == 'd'){                                           // Rotate Clockwise
-        directionIndex = (directionIndex + 1) % 4;
-        strcpy(directionFacing, directions[directionIndex]);
-    }
-    else if(movement == 'w' || movement == 's'){                        // Move Forward and Backward
+    else if(movement == 'w' || movement == 's'){                                            // Move Forward and Backward
         int direction = (movement == 'w') ? -1 : 1;
 
         if(!strcmp(directionFacing, "up")) newY += direction;
@@ -115,3 +117,20 @@ void movePlayer(char movement, int mazeMap[][mapSize], int currentPosition[], in
         mazeMap[newY][newX] = 1;
     }
 }
+
+void displayMenu(){
+        printf("\e[1;1H\e[2J");
+        printf("\n\n\t\t                       ######                                                                                                                                   \n");
+        printf("\t\t                     ##**##**##                     ______  ______  ______  __    __  ______  __  __  __  ______                                                    \n");
+        printf("\t\t               #####################               /\\  == \\/\\  __ \\/\\  __ \\/\\ \"-./  \\/\\  == \\/\\ \\_\\ \\/\\ \\/\\  ___\\                                \n");
+        printf("\t\t           #########*##########*########*          \\ \\  __<\\ \\ \\/\\ \\ \\ \\/\\ \\ \\ \\-./\\ \\ \\  __<\\ \\  __ \\ \\ \\ \\  __\\                            \n");
+        printf("\t\t         ##**********#**+==+##############          \\ \\_\\ \\_\\ \\_____\\ \\_____\\ \\_\\ \\ \\_\\ \\_____\\ \\_\\ \\_\\ \\_\\ \\_____\\                         \n");
+        printf("\t\t         *#*****************************#*+          \\/_/ /_/\\/_____/\\/_____/\\/_/  \\/_/\\/_____/\\/_/\\/_/\\/_/\\/_____/                                       \n");
+        printf("\t\t         =#***************#***********###++         ______ __  __  ______      ______  ______  ______  __    __  ______  ______                                     \n");
+        printf("\t\t         =+*####*********##********###**+=         /\\__  _/\\ \\_\\ \\/\\  ___\\    /\\  == \\/\\  __ \\/\\  __ \\/\\ \"-./  \\/\\  == \\/\\  __ \\                \n");
+        printf("\t\t         ++**#***********************#**++         \\/_/\\ \\\\ \\  __ \\ \\  __\\    \\ \\  __<\\ \\ \\/\\ \\ \\ \\/\\ \\ \\ \\-./\\ \\ \\  __<\\ \\  __ \\        \n");
+        printf("\t\t           #*#####################***#**#             \\ \\_\\\\ \\_\\ \\_\\ \\_____\\   \\ \\_\\ \\_\\ \\_____\\ \\_____\\ \\_\\ \\ \\_\\ \\_____\\ \\_\\ \\_\\    \n");
+        printf("\t\t             **#######********####***##                \\/_/ \\/_/\\/_/\\/_____/    \\/_/ /_/\\/_____/\\/_____/\\/_/  \\/_/\\/_____/\\/_/\\/_/                      \n");
+        printf("\t\t                 ****####**###****                                                                                                                                  \n");
+        printf("\n\t-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------");
+    }
