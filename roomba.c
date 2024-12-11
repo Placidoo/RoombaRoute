@@ -6,7 +6,7 @@
 // NOTE: Inom Tubig jusq
 
 // TODO: Levels, Input & Error Handler, GUI
-
+// 0 = Blocked, 1 = Open, 2 = Objective
 
 // Colors:
 #define colorGreen "\e[1;32m"
@@ -15,22 +15,43 @@
 #define colorReset "\e[0m"
 
 // Global Variables
-int mapSize = 5, objectiveCount = 1;
-int currentPosition[] = {0, 0};
+int mapSize = 0, objectiveCount = 1, indexer = 0, separateTabIndex = 0;
+int currentPosition[] = {9, 0};
 char directionFacing[] = "right";
+char gameMode[] = "play";
+
+// Input Handler (Wag Alisin!!!)
+char *input[500];
+char **ptr = input;
+
+char *help[50] = {  "Help Section:", " ", "     Code\t\t\tDescription",
+                    " ", "[ move(forward) ]\tMove RoomBhie one(1) tile Forward."};
+char **ptr2 = help;
+
 
 // Functions Initialization
 void mapLayout();
+void inputHandler();
+void separateTab();
 void displayMenu();
 void movePlayer(char movement, int mazeMap[][mapSize], int currentPosition[], int boundaryX, int boundaryY);
 
 int main(){
-    int mazeMap[5][5] = {   {1, 2, 2, 2, 2},
-                            {0, 0, 0, 0, 2},
-                            {2, 2, 2, 2 ,2},
-                            {2, 0, 0, 0, 0},
-                            {2, 2, 2, 2, 2}          };
-    mapSize = 5;
+
+    // Use this every level vvvv
+    mapSize = 10;
+    int mazeMap[10][10] = { {1,1,1,1,1,1,1,1,1,0},
+                            {1,0,1,0,1,1,1,1,1,1},
+                            {1,0,1,0,1,0,0,0,0,1},
+                            {1,1,1,0,1,1,1,1,1,1},
+                            {1,0,0,1,1,0,0,0,1,0},
+                            {1,1,1,1,0,2,1,0,1,1},
+                            {1,0,1,0,0,0,1,0,0,1},
+                            {1,1,1,1,1,1,1,0,1,1},
+                            {0,0,0,0,0,0,0,1,1,1},
+                            {1,1,1,1,1,1,1,1,1,0}  };
+    for(int x = 0; x < 50; x++) ptr[x] = malloc(50 * sizeof(char)); // Allocate Memory for Each Input (Wag Alisin!!!)
+    // Use this every level ^^^^
 
     while(objectiveCount != 0){
         objectiveCount = 0;         // Reset to Zero
@@ -43,7 +64,7 @@ int main(){
 void mapLayout(int mazeMap[][mapSize], int currentPosition[2], int row, int column){
     int Xaxis, Yaxis;
     int columnSpacing, columnSeparator, rowSeparator, rowLines;
-
+    separateTabIndex = 0;
 
     // Draw Map Layout Here:
 
@@ -51,16 +72,17 @@ void mapLayout(int mazeMap[][mapSize], int currentPosition[2], int row, int colu
     for(Yaxis = 0; Yaxis < row; Yaxis++){
         // Vertical Lines
         printf("\n\t\t");
-        for(rowSeparator = 0; rowSeparator < 5; rowSeparator++) printf("+-------");
+        for(rowSeparator = 0; rowSeparator < mapSize; rowSeparator++) printf("+-------");
         printf("+");
         printf("\t\t\t|");      // NOTE: This line is for separator of Panels
+        separateTab();
         // Horizontal Lines
         for(columnSeparator = 0; columnSeparator < 3; columnSeparator++){
             printf("\n\t\t");
             for(Xaxis = 0; Xaxis < (column + 1); Xaxis++){
                 printf("|");
                 for(columnSpacing = 0; columnSpacing < 7; columnSpacing++){
-                    if(columnSpacing == 3 && columnSeparator == 1 && Xaxis != 5){
+                    if(columnSpacing == 3 && columnSeparator == 1 && Xaxis != mapSize){
                         if(Yaxis == currentPosition[0] && Xaxis == currentPosition[1]){                                     // Player Icon
                             printf(colorGreen);
                             printf((!strcmp(directionFacing, "up")) ? "↑" : (!strcmp(directionFacing, "left")) ? "←" :
@@ -73,18 +95,53 @@ void mapLayout(int mazeMap[][mapSize], int currentPosition[2], int row, int colu
                 }
             }
             printf("\t\t|");        // NOTE: This line is for separator of Panels
+            separateTab();
         }
     }
     printf("\n\t\t");
-    for(rowSeparator = 0; rowSeparator < 5; rowSeparator++) printf("+-------");
+    for(rowSeparator = 0; rowSeparator < mapSize; rowSeparator++) printf("+-------");
     printf("+");
+    printf("\t\t\t|");        // NOTE: This line is for separator of Panels
+    separateTab();
 
     // Read Input Here:
 
-    char movement;
-    printf("\nCurrent Y-Position: %d\t\t[w] - Move Forward\nCurrent X-Position: %d\t\t[s] - Move Backward\nDirection Facing: %s\t\t[a / d] - Rotate\nYour Move: ", currentPosition[0], currentPosition[1], directionFacing);
-    scanf("%c", &movement);
-    movePlayer(movement, mazeMap, currentPosition, row, column);
+    printf("\n\n\tCurrent Y-Position: %d\t\t[help] - View Commands\n\tCurrent X-Position: %d\t\t[exit] - Return to Main Menu\n\tDirection Facing: %s\n\tYour Input: ", currentPosition[0], currentPosition[1], directionFacing);
+    inputHandler();
+    //movePlayer(movement, mazeMap, currentPosition, row, column);
+}
+
+void separateTab(){
+    if(!strcmp(gameMode,"play")){
+        if(separateTabIndex == 0){
+            printf("\tRoomBhie's Code:");
+        }
+        else if(separateTabIndex == 1){
+            printf("");
+        }
+        else if(ptr[separateTabIndex] != NULL){
+            printf("\t%d\t\t%s", separateTabIndex-1, ptr[separateTabIndex-2]);
+        }
+    }
+    else if(!strcmp(gameMode,"help")){
+        if(ptr2[separateTabIndex] != NULL){
+            printf("\t%s", ptr2[separateTabIndex]);
+        }
+    }
+    separateTabIndex++;
+}
+
+void inputHandler(){
+    char movement[50];
+        scanf("%s",&movement);
+
+        if(!strcmp(movement, "help")) strcpy(gameMode, "help");
+        else if(!strcmp(gameMode, "help") && !strcmp(movement, "exit")) strcpy(gameMode, "play");
+
+        else if(!strcmp(gameMode, "play")){
+            strcpy(ptr[indexer], movement);
+            indexer++;
+        }
 }
 
 void movePlayer(char movement, int mazeMap[][mapSize], int currentPosition[], int boundaryX, int boundaryY){
@@ -118,8 +175,9 @@ void movePlayer(char movement, int mazeMap[][mapSize], int currentPosition[], in
     }
 }
 
+// GUI Dito
+
 void displayMenu(){
-        printf("\e[1;1H\e[2J");
         printf("\n\n\t\t                       ######                                                                                                                                   \n");
         printf("\t\t                     ##**##**##                     ______  ______  ______  __    __  ______  __  __  __  ______                                                    \n");
         printf("\t\t               #####################               /\\  == \\/\\  __ \\/\\  __ \\/\\ \"-./  \\/\\  == \\/\\ \\_\\ \\/\\ \\/\\  ___\\                                \n");
