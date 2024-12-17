@@ -15,41 +15,45 @@
 #define colorReset "\e[0m"
 
 // Global Variables
-int mapSize = 0, objectiveCount = 1, indexer = 0, separateTabIndex = 0;
-int currentPosition[] = {9, 0};
+int mapSize = 0, objectiveCount = 1, indexer = 0, separateTabIndex = 0, executeIndex = 0;
+int currentPosition[] = {0, 0};
 char directionFacing[] = "right";
 char gameMode[] = "play";
+char errorLine[100];
 
 // Input Handler (Wag Alisin!!!)
 char *input[500];
 char **ptr = input;
 
-char *help[50] = {  "Help Section:", " ", "     Code\t\t\tDescription",
-                    " ", "[ move(forward) ]\tMove RoomBhie one(1) tile Forward."};
+// Help Section
+char *help[50] = {  "Help Section:", " ", "     Code\t\t\tDescription", " ",
+                    "[ start ]\t\tto Begin the Program", "[ end ]\t\t\tto Stop the Program",
+                    "[ move(fwd) ]\t\tMove RoomBhie one(1) tile Forward", "[ move(bwd) ]\t\tMove RoomBhie one(1) tile Backward",
+                    "[ rotate(cw) ]\t\tRotate RoomBhie Clockwise", "[ rotate(ccw) ]\t\tRotate RoomBhie Counter Clockwise",
+                    "[ reset ]\t\tErase all lines of code",
+                    "", "exit to Return"};
 char **ptr2 = help;
 
 
 // Functions Initialization
 void mapLayout();
-void inputHandler();
+char inputHandler();
 void separateTab();
 void displayMenu();
+void executeCode();
 void movePlayer(char movement, int mazeMap[][mapSize], int currentPosition[], int boundaryX, int boundaryY);
 
 int main(){
 
     // Use this every level vvvv
-    mapSize = 10;
-    int mazeMap[10][10] = { {1,1,1,1,1,1,1,1,1,0},
-                            {1,0,1,0,1,1,1,1,1,1},
-                            {1,0,1,0,1,0,0,0,0,1},
-                            {1,1,1,0,1,1,1,1,1,1},
-                            {1,0,0,1,1,0,0,0,1,0},
-                            {1,1,1,1,0,2,1,0,1,1},
-                            {1,0,1,0,0,0,1,0,0,1},
-                            {1,1,1,1,1,1,1,0,1,1},
-                            {0,0,0,0,0,0,0,1,1,1},
-                            {1,1,1,1,1,1,1,1,1,0}  };
+    mapSize = 5;
+    int mazeMap[5][5] = {   {1,0,1,1,1},
+                            {1,1,1,0,1},
+                            {1,0,0,1,1},
+                            {1,0,0,1,0},   
+                            {1,1,1,1,2}  };
+    currentPosition[0] = 0; // Y Axis
+    currentPosition[1] = 0; // X Axis
     for(int x = 0; x < 50; x++) ptr[x] = malloc(50 * sizeof(char)); // Allocate Memory for Each Input (Wag Alisin!!!)
     // Use this every level ^^^^
 
@@ -107,41 +111,61 @@ void mapLayout(int mazeMap[][mapSize], int currentPosition[2], int row, int colu
     // Read Input Here:
 
     printf("\n\n\tCurrent Y-Position: %d\t\t[help] - View Commands\n\tCurrent X-Position: %d\t\t[exit] - Return to Main Menu\n\tDirection Facing: %s\n\tYour Input: ", currentPosition[0], currentPosition[1], directionFacing);
-    inputHandler();
-    //movePlayer(movement, mazeMap, currentPosition, row, column);
+    if(inputHandler() == 'e') executeCode(mazeMap, currentPosition, row, column);
 }
 
 void separateTab(){
     if(!strcmp(gameMode,"play")){
-        if(separateTabIndex == 0){
-            printf("\tRoomBhie's Code:");
-        }
-        else if(separateTabIndex == 1){
-            printf("");
-        }
+        if(separateTabIndex == 0) printf("\tRoomBhie's Code:");
+        else if(separateTabIndex == 1) printf("\t%s%s%s", colorRed, errorLine, colorReset);
         else if(ptr[separateTabIndex] != NULL){
-            printf("\t%d\t\t%s", separateTabIndex-1, ptr[separateTabIndex-2]);
+            if(separateTabIndex == executeIndex) printf("\t>\t\t%s", ptr[separateTabIndex-2]);
+            else printf("\t%d\t\t%s", separateTabIndex-1, ptr[separateTabIndex-2]);
         }
     }
     else if(!strcmp(gameMode,"help")){
-        if(ptr2[separateTabIndex] != NULL){
-            printf("\t%s", ptr2[separateTabIndex]);
-        }
+        if(ptr2[separateTabIndex] != NULL) printf("\t%s", ptr2[separateTabIndex]);
     }
     separateTabIndex++;
 }
 
-void inputHandler(){
+char inputHandler(){
+    strcpy(errorLine, " ");
+
     char movement[50];
         scanf("%s",&movement);
 
         if(!strcmp(movement, "help")) strcpy(gameMode, "help");
         else if(!strcmp(gameMode, "help") && !strcmp(movement, "exit")) strcpy(gameMode, "play");
 
+        // Play Section
         else if(!strcmp(gameMode, "play")){
-            strcpy(ptr[indexer], movement);
-            indexer++;
+
+            if(indexer == 0 && strcmp(movement, "start")) strcpy(errorLine, "Error: program must begin with the 'start' command.");
+            else if(!strcmp(movement, "reset")){
+                for(int x = 0; x < 50; x++) ptr[x] = malloc(50 * sizeof(char));
+                indexer = 0;
+            }
+            //char *syntax = strtok(movement, "move");
+            //printf("%s\n", syntax);
+            else{
+                strcpy(ptr[indexer], movement);
+
+                if(!strcmp(movement, "end")) return 'e';
+                indexer++;
+            }
         }
+
+    return 'x';
+}
+
+void executeCode(int mazeMap[][mapSize], int currentPosition[], int row, int column){
+    for(int lines=1; lines<indexer; lines++){
+        if(!strcmp(ptr[lines],"move(fwd)")) movePlayer('w', mazeMap, currentPosition, row, column);
+        else if(!strcmp(ptr[lines],"move(bwd)")) movePlayer('s', mazeMap, currentPosition, row, column);
+        else if(!strcmp(ptr[lines],"rotate(cw)")) movePlayer('d', mazeMap, currentPosition, row, column);
+        else if(!strcmp(ptr[lines],"rotate(ccw)")) movePlayer('a', mazeMap, currentPosition, row, column);
+    }
 }
 
 void movePlayer(char movement, int mazeMap[][mapSize], int currentPosition[], int boundaryX, int boundaryY){
